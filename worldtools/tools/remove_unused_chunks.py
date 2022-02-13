@@ -66,7 +66,6 @@ def start(world_folder):
             region_file.unlink()
             pbar.update(delete_count)
 
-   print(int(round((time.time() - start_time) * 1000)))
    elapsed_seconds = int(time.time() - start_time)
    elapsed_minutes = int(elapsed_seconds / 60)
    elapsed_seconds %= 60
