@@ -5,7 +5,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Rapha149/MCWorldTools.svg?style=flat-square&logo=github&label=Stars&logoColor=white)](https://github.com/Rapha149/MCWorldTools/)
 [![PyPi downloads](https://img.shields.io/pypi/dm/mcworldtools.svg?style=flat-square)](https://pypistats.org/packages/mcworldtools/)
 
-Useful tools for Minecraft worlds such as remove unused chunks, find blocks or entities.  
+Useful tools for Minecraft worlds such as removing unused chunks and finding blocks, command blocks or entities.  
 Tested from `1.7.10` up to `1.18.1`.
 
 ## Installation
