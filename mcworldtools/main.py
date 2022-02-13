@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from nbt.nbt import *
 
-from tools import remove_unused_chunks, find_blocks, find_command_blocks, find_entities
+from .tools import remove_unused_chunks, find_blocks, find_command_blocks, find_entities
 
 def main():
    world_folder = Path.cwd()
