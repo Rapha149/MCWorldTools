@@ -81,4 +81,4 @@ def start(world_folder):
       freed_space /= 1000
       freed_space_unit = 'GB'
 
-   print(f'\nDeleted {count}/{total} chunks. (Elapsed time: {elapsed_minutes}m {elapsed_seconds}s; Freed space: {freed_space:.2f}{freed_space_unit})')
+   print(f'\nDeleted {count}/{total} ({count/total*100:0.2f}%) chunks. (Elapsed time: {elapsed_minutes}m {elapsed_seconds}s; Freed space: {freed_space:.2f}{freed_space_unit})')
