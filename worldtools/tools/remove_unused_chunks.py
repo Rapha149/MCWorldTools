@@ -19,6 +19,7 @@ def start(world_folder):
 
    print('\nWarning: This operation will delete all chunks in which no player was present.'
          '\nTherefore, chunks with changed blocks may be deleted since players can change blocks even if they are not in the chunk.'
+         '\nIt is recommended to make a backup of your world beforehand.'
          '\nNo further confirmation requests will be made before chunks are deleted.')
    while True:
       answer = input('Do you want to continue? (y/N): ')
