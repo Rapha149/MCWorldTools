@@ -17,10 +17,10 @@ def start(world_folder):
       print('No region folder was found.')
       exit(3)
 
-   print('\nWarning: This operation will delete all chunks in which no player was present.'
-         '\nTherefore, chunks with changed blocks may be deleted since players can change blocks even if they are not in the chunk.'
+   print('\nWarning: This operation will remove all chunks in which no player was present.'
+         '\nTherefore, chunks with changed blocks may be removed since players can change blocks even if they are not in the chunk.'
          '\nIt is recommended to make a backup of your world beforehand.'
-         '\nNo further confirmation requests will be made before chunks are deleted.')
+         '\nNo further confirmation requests will be made before chunks are removed.')
    while True:
       answer = input('Do you want to continue? (y/N): ')
       if not answer or answer.lower() == 'n':
@@ -81,4 +81,4 @@ def start(world_folder):
       freed_space /= 1000
       freed_space_unit = 'GB'
 
-   print(f'\nDeleted {count}/{total} ({count/total*100:0.2f}%) chunks. (Elapsed time: {elapsed_minutes}m {elapsed_seconds}s; Freed space: {freed_space:.2f}{freed_space_unit})')
+   print(f'\nRemoved {count}/{total} ({count/total*100:0.2f}%) chunks. (Elapsed time: {elapsed_minutes}m {elapsed_seconds}s; Freed space: {freed_space:.2f}{freed_space_unit})')
