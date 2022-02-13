@@ -23,7 +23,8 @@ def main():
    level = NBTFile(fileobj=level_dat.open('rb'))
    try:
       data = level['Data']
-      print(f'Detected world: "{data["LevelName"]}" (Version: {data["Version"]["Name"]})')
+      version = f' (Version: {data["Version"]["Name"]})' if 'Version' in data else ''
+      print(f'Detected world: "{data["LevelName"]}"{version}')
    except KeyError:
       print('This is not a valid world folder.')
       exit(2)
