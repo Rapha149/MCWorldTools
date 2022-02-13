@@ -20,5 +20,5 @@ The script will tell you the name of your Minecraft world and - if possible, it 
 After that you can choose which tool you want to use by stating the number of the tool.
 
 ### Warning
-Do **NOT** use this script for a world that is currently opened (i.e. in Minecraft Singleplayer or by a Minecraft server).
+Do **NOT** use these tools for a world that is currently opened (i.e. in Minecraft Singleplayer or by a Minecraft server).
 Doing so may lead to unintended consequences. I do NOT take any responsibility for your Minecraft world if you do that.
