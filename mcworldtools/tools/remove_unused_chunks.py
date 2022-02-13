@@ -35,7 +35,7 @@ def start(world_folder):
 
    count, total = 0, 0
    start_time = time.time()
-   print('\nDeleting unused chunks...')
+   print('\nRemoving unused chunks...')
    with tqdm(total = len(files) * 32 * 32 * 2,
              unit_scale = 1 / 32 / 32 / 2,
              bar_format = '{percentage:.2f}% |{bar}| [{n:.0f}/{total:.0f} files]  ') as pbar:
