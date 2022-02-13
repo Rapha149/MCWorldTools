@@ -36,12 +36,12 @@ def main():
 
    tool = None
    while True:
-      tool_input = input('> ')
-      if not tool_input.isnumeric():
+      answer = input('Select a tool (1-4): ')
+      if not answer.isnumeric():
          print('Please state a number.')
          continue
       
-      tool = int(tool_input)
+      tool = int(answer)
       if tool < 1 or tool > 4:
          print('Please state a number between 1 and 4.')
          continue

@@ -1,3 +1,4 @@
+import time
 from tqdm import tqdm
 from chunk import Chunk
 from pathlib import Path
@@ -16,11 +17,24 @@ def start(world_folder):
       print('No region folder was found.')
       exit(3)
 
+   print('\nWarning: This operation will delete all chunks in which no player was present.'
+         '\nTherefore, chunks with changed blocks may be deleted since players can change blocks even if they are not in the chunk.'
+         '\nNo further confirmation requests will be made before chunks are deleted.')
+   while True:
+      answer = input('Do you want to continue? (y/N): ')
+      if not answer or answer.lower() == 'n':
+         exit()
+      elif answer.lower() != 'y':
+         print('Please state "y" or "n".')
+      else:
+         break
+
    files = list_files(region_folder)
    size = get_size(files)
 
    count, total = 0, 0
-   print('\nDeleting chunks...')
+   start_time = time.time()
+   print('\nDeleting unused chunks...')
    with tqdm(total = len(files) * 32 * 32 * 2,
              unit_scale = 1 / 32 / 32 / 2,
              bar_format = '{percentage:.2f}% |{bar}| [{n:.0f}/{total:.0f} files]  ') as pbar:
@@ -52,7 +66,11 @@ def start(world_folder):
             region_file.unlink()
             pbar.update(delete_count)
 
-   
+   print(int(round((time.time() - start_time) * 1000)))
+   elapsed_seconds = int(time.time() - start_time)
+   elapsed_minutes = int(elapsed_seconds / 60)
+   elapsed_seconds %= 60
+
    new_size = get_size(list_files(region_folder))
    freed_space_unit = 'kB'
    freed_space = (size - new_size) / 1000
@@ -63,4 +81,4 @@ def start(world_folder):
       freed_space /= 1000
       freed_space_unit = 'GB'
 
-   print(f'\nDeleted {count}/{total} chunks! (Freed space: {freed_space:.2f}{freed_space_unit})')
+   print(f'\nDeleted {count}/{total} chunks. (Elapsed time: {elapsed_minutes}m {elapsed_seconds}s; Freed space: {freed_space:.2f}{freed_space_unit})')
