@@ -12,12 +12,21 @@ Tested from `1.7.10` up to `1.18.1`.
 ```pip install mcworldtools```
 
 ## Usage
-You can simply run the command `mcworldtools` in a Minecraft world folder.
-If you don't want to run the command in that folder, you can also pass it to the script as the first argument. For example:  
-```mcworldtools my_minecraft_world```
-
+You can simply run the command `mcworldtools` in a Minecraft world folder.  
 The script will tell you the name of your Minecraft world and - if possible, it may not be in older versions - the Minecraft version of your world.  
 After that you can choose which tool you want to use by stating the number of the tool.
+
+### Further usage
+```mcworldtools [-h] [-w WORLD] [-t TOOL] [-o OUTPUT_FILE] [-f {json,yaml}] [--confirm]```
+
+**Arguments:**
+- `-h --help` Show the help message and exit
+- `-w WORLD, --world WORLD` Use a different world folder than the current working directory.
+- `-t TOOL, --tool TOOL` Choose the tool to use beforehand.
+- `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to.
+- `-f {json,yaml}, --output-format {json,yaml}` The output file format. May be `json` (default) or `yaml`.
+- `--confirm` Automatically confirm any confirmation requests.
+
 
 ### Warning
 Do **NOT** use these tools for a world that is currently opened (i.e. in Minecraft Singleplayer or by a Minecraft server).
