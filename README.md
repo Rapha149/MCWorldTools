@@ -21,12 +21,11 @@ After that you can choose which tool you want to use by stating the number of th
 
 **Arguments:**
 - `-h --help` Show the help message and exit
-- `-w WORLD, --world WORLD` Use a different world folder than the current working directory.
+- `-w WORLD, --world WORLD` Use a different world folder than the current working directory. You can provide this option multiple times for multiple words.
 - `-t TOOL, --tool TOOL` Choose the tool to use beforehand.
 - `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to.
 - `-f {json,yaml}, --output-format {json,yaml}` The output file format. May be `json` (default) or `yaml`.
 - `--confirm` Automatically confirm any confirmation requests.
-
 
 ### Warning
 Do **NOT** use these tools for a world that is currently opened (i.e. in Minecraft Singleplayer or by a Minecraft server).
