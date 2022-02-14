@@ -1,2 +1,2 @@
-def start(world_folder, output_file, output_format, confirm):
-   pass
+def start(world_folders, output_file, output_format, confirm):
+    pass
