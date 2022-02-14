@@ -14,11 +14,11 @@ def main():
    parser = ArgumentParser(prog='mcworldtools',
                            description='MCWorldTools by Rapha149',
                            allow_abbrev=False)
-   parser.add_argument('-w', '--world', help='Use a different world folder than the current working directory.')
+   parser.add_argument('-w', '--world', help='Use a different world folder than the current working directory')
    parser.add_argument('-t', '--tool', type=int, choices=range(1, len(available_tools) + 1), help='Choose the tool you want to use beforehand')
-   parser.add_argument('-o', '--output', help='Select a file to write the output statistics to.')
-   parser.add_argument('-f', '--output-format', choices=['json', 'yaml'], default='json', help='The output file format. May be "json" (default) or "yaml".')
-   parser.add_argument('--confirm', action='store_true', help='Automatically confirm any confirmation requests.')
+   parser.add_argument('-o', '--output_file', help='Select a file to write the output statistics to')
+   parser.add_argument('-f', '--output-format', choices=['json', 'yaml'], default='json', help='The output file format. May be "json" (default) or "yaml"')
+   parser.add_argument('--confirm', action='store_true', help='Automatically confirm any confirmation requests')
    args = parser.parse_args()
 
    world_folder = Path.cwd()
@@ -29,8 +29,8 @@ def main():
          exit(1)
 
    output_file = None
-   if args.output:
-      output_file = Path(args.output)
+   if args.output_file:
+      output_file = Path(args.output_file)
       if output_file.is_dir():
          print(f'The output file "{output_file.name}" is a folder.')
          exit(1)
