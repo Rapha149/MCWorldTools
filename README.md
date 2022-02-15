@@ -17,14 +17,14 @@ The script will tell you the name of your Minecraft world and - if possible, it 
 After that you can choose which tool you want to use by stating the number of the tool.
 
 ### Further usage
-```mcworldtools [-h] [-w WORLD] [-t TOOL] [-o OUTPUT_FILE] [-f {json,yaml}] [--confirm]```
+```mcworldtools [-h] [-w WORLD] [-t TOOL] [-o OUTPUT_FILE] [-f {plain,json,yaml}] [--confirm]```
 
 **Arguments:**
 - `-h --help` Show the help message and exit
 - `-w WORLD, --world WORLD` Use a different world folder than the current working directory. You can provide this option multiple times for multiple words.
 - `-t TOOL, --tool TOOL` Choose the tool to use beforehand.
 - `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to.
-- `-f {json,yaml}, --output-format {json,yaml}` The output file format. May be `json` (default) or `yaml`.
+- `-f {plain,json,yaml}, --output-format {plain,json,yaml}` The output file format. May be `plain` (default), `json` or `yaml`.
 - `--confirm` Automatically confirm any confirmation requests.
 
 ### Warning
