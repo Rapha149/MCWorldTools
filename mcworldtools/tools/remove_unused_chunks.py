@@ -59,11 +59,10 @@ def start(world_folders, output_file, output_format, confirm):
     total_freed_space = 0
     worlds = {}
     for world_folder in world_folders:
-        world = world_folder.name
         region_folders = [region_folder for region_folder in
                           [Path(world_folder, folder) for folder in possible_region_folders] if region_folder.is_dir()]
         if not region_folders:
-            print(f'\nNo region folder was found in world "{world}"')
+            print(f'\nNo region folder was found in world "{world_folder}"')
             continue
 
         files = list_files(region_folders)
@@ -71,7 +70,7 @@ def start(world_folders, output_file, output_format, confirm):
 
         count, total = 0, 0
         start_time = time.time()
-        print(f'\nRemoving unused chunks of world "{world}"...')
+        print(f'\nRemoving unused chunks of world "{world_folder}"...')
         with tqdm(total=len(files) * 32 * 32 * 2,
                   unit_scale=1 / 32 / 32 / 2,
                   bar_format='{percentage:.2f}% |{bar}| [{n:.0f}/{total:.0f} files]  ') as pbar:
@@ -110,12 +109,12 @@ def start(world_folders, output_file, output_format, confirm):
         freed_space, freed_space_unit = format_freed_space(raw_freed_space)
         human_readable_freed_space = f'{freed_space:.2f}{freed_space_unit}'
 
-        print(f'Removed {count}/{total} ({count / total * 100:0.2f}%) chunks of world "{world}". '
+        print(f'Removed {count}/{total} ({count / total * 100:0.2f}%) chunks of world "{world_folder}". '
               f'(Elapsed time: {human_readable_elapsed_time}; Freed space: {human_readable_freed_space})')
 
         if output_file:
             total_freed_space += raw_freed_space
-            worlds[world] = {
+            worlds[str(world_folder.resolve())] = {
                 'chunks': {
                     'removed': count,
                     'total': total
@@ -130,27 +129,46 @@ def start(world_folders, output_file, output_format, confirm):
                 }
             }
 
-    if output_file:
-        elapsed_time = int(round((time.time() - total_start_time) * 1000))
-        freed_space, freed_space_unit = format_freed_space(total_freed_space)
+    elapsed_time = int(round((time.time() - total_start_time) * 1000))
+    human_readable_elapsed_time = format_time(elapsed_time)
+    freed_space, freed_space_unit = format_freed_space(total_freed_space)
+    human_readable_freed_space = f'{freed_space:.2f}{freed_space_unit}'
 
+    if len(world_folders) > 1:
+        print(f'\nTotal elapsed time: {human_readable_elapsed_time}'
+              f'\nTotal freed space: {human_readable_freed_space}')
+
+    if output_file:
         data = {
             'worlds': worlds,
             'total': {
                 'elapsed_time': {
                     'raw': elapsed_time,
-                    'human_readable': format_time(elapsed_time)
+                    'human_readable': human_readable_elapsed_time
                 },
                 'freed_space': {
                     'raw': total_freed_space,
-                    'human_readable': f'{freed_space:.2f}{freed_space_unit}'
+                    'human_readable': human_readable_freed_space
                 }
             }
         }
 
-        with output_file.open('w') as file:
-            if output_format == 'json':
+        with Path(output_file).open('w') as file:
+            if output_format == 'plain':
+                file.write(f'--- MCWorldTools by Rapha149 ---'
+                           f'\n\u00B7\u00B7\u00B7 Remove unused chunks \u00B7\u00B7\u00B7'
+                           f'\n\nTotal elapsed time: {human_readable_elapsed_time}'
+                           f'\nTotal freed space: {human_readable_freed_space}'
+                           f'\n\n[ Worlds ]' +
+                           ('\n'.join([f'\n{world}'
+                                       f'\n    Chunks'
+                                       f'\n        Removed: {info["chunks"]["removed"]}'
+                                       f'\n        Total: {info["chunks"]["total"]}'
+                                       f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}'
+                                       f'\n    Freed space: {info["freed_space"]["human_readable"]}'
+                                       for world, info in worlds.items()])))
+            elif output_format == 'json':
                 json.dump(data, file, indent=3)
             elif output_format == 'yaml':
                 yaml.dump(data, file, indent=3)
-            print(f'\nSaved output to "{output_file.name}"')
+            print(f'\nSaved output to "{output_file}"')
