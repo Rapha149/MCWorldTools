@@ -23,7 +23,7 @@ After that you can choose which tool you want to use by stating the number of th
 - `-h --help` Show the help message and exit
 - `-w WORLD, --world WORLD` Use a different world folder than the current working directory. You can provide this option multiple times for multiple words.
 - `-t TOOL, --tool TOOL` Choose the tool to use beforehand.
-- `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to.
+- `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to. This option is mandatory when searching for something.
 - `-f {plain,json,yaml}, --output-format {plain,json,yaml}` The output file format. May be `plain` (default), `json` or `yaml`.
 - `--confirm` Automatically confirm any confirmation requests.
 

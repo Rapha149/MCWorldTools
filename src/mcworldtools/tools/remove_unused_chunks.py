@@ -1,43 +1,13 @@
 import json
-import yaml
 from pathlib import Path
 
+import yaml
 from nbt.region import *
 from tqdm import tqdm
 
+from ..util import *
+
 possible_region_folders = ('region', 'DIM-1/region', 'DIM1/region')
-
-
-def list_files(folders):
-    files = []
-    for folder in folders:
-        for file in folder.iterdir():
-            if file.is_file() and file.name.endswith('.mca'):
-                files.append(file)
-    return files
-
-
-def get_size(files):
-    return sum(file.stat().st_size for file in files)
-
-
-def format_time(input_time):
-    seconds = int(input_time / 1000)
-    minutes = int(seconds / 60)
-    seconds %= 60
-    return f'{minutes}m {seconds}s'
-
-
-def format_freed_space(raw_freed_space):
-    freed_space_unit = 'kB'
-    freed_space = raw_freed_space / 1000
-    if freed_space >= 1000:
-        freed_space /= 1000
-        freed_space_unit = 'MB'
-    if freed_space >= 1000:
-        freed_space /= 1000
-        freed_space_unit = 'GB'
-    return freed_space, freed_space_unit
 
 
 def start(world_folders, output_file, output_format, confirm):
@@ -85,6 +55,7 @@ def start(world_folders, output_file, output_format, confirm):
 
                     delete = []
                     for chunk in region.iter_chunks():
+                        print(chunk.loc)
                         if (chunk['Level'] if 'Level' in chunk else chunk)['InhabitedTime'].value == 0:
                             delete.append((chunk.loc.x, chunk.loc.z))
                             pbar.update()
