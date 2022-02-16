@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 import yaml
@@ -10,7 +11,16 @@ from ..util import *
 possible_region_folders = ('region', 'DIM-1/region', 'DIM1/region')
 
 
-def start(world_folders, output_file, output_format, confirm):
+def start(world_folders, output_file, output_format, input_data, confirm):
+    inhabited_time = 0
+    if input_data and 'inhabited_time' in input_data:
+        print('\nLoading input file data...')
+        inhabited_time = input_data['inhabited_time']
+        if type(inhabited_time) is not int:
+            eprint(f'Inhabited time has to be a number but is "{inhabited_time}".')
+            exit(3)
+        print(f'Using "{inhabited_time}" as inhabited time.')
+
     if not confirm:
         print('\nWarning: This operation will remove all chunks in which no player was present.'
               '\nTherefore, chunks with changed blocks may be removed since players can change blocks even if they are not in the chunk.'
@@ -36,28 +46,45 @@ def start(world_folders, output_file, output_format, confirm):
             continue
 
         files = list_files(region_folders)
+        file_count = len(files)
         size = get_size(files)
 
         count, total = 0, 0
         start_time = time.time()
+        messages = []
         print(f'\nRemoving unused chunks of world "{world_folder}"...')
-        with tqdm(total=len(files) * 32 * 32 * 2,
+        with tqdm(total=file_count * 32 * 32 * 2 if file_count > 0 else 1,
                   unit_scale=1 / 32 / 32 / 2,
                   bar_format='{percentage:.2f}% |{bar}| [{n:.0f}/{total:.0f} files]  ') as pbar:
+
+            if file_count <= 0:
+                pbar.update(1)
 
             for region_file in files:
                 with region_file.open('r+b') as file:
                     region = RegionFile(fileobj=file)
+                    result = re.match('r\\.(-?\\d+)\\.(-?\\d+)\\.mca', region_file.name)
+                    if result:
+                        region.loc = Location(x=int(result.group(1)), z=int(result.group(2)))
 
                     chunk_count = region.chunk_count()
+
                     total += chunk_count
                     pbar.update(32 * 32 * 2 - chunk_count * 2)
 
                     delete = []
-                    for chunk in region.iter_chunks():
-                        print(chunk.loc)
-                        if (chunk['Level'] if 'Level' in chunk else chunk)['InhabitedTime'].value == 0:
-                            delete.append((chunk.loc.x, chunk.loc.z))
+                    for coords in region.get_chunk_coords():
+                        x, z, = coords['x'], coords['z']
+                        chunk = region.get_chunk(x, z)
+                        data = chunk['Level'] if 'Level' in chunk else chunk
+
+                        if 'InhabitedTime' not in data:
+                            messages.append(
+                                f'Chunk {x} {z} (in world at {chunk.loc.x} {chunk.loc.z}) in the region file "{region_file.name}" could not be read.')
+                            continue
+
+                        if data['InhabitedTime'].value <= inhabited_time:
+                            delete.append((x, z))
                             pbar.update()
                         else:
                             pbar.update(2)
@@ -80,8 +107,12 @@ def start(world_folders, output_file, output_format, confirm):
         freed_space, freed_space_unit = format_freed_space(raw_freed_space)
         human_readable_freed_space = f'{freed_space:.2f}{freed_space_unit}'
 
-        print(f'Removed {count}/{total} ({count / total * 100:0.2f}%) chunks of world "{world_folder}". '
-              f'(Elapsed time: {human_readable_elapsed_time}; Freed space: {human_readable_freed_space})')
+        print(
+            f'Removed {count}/{total} ({count / total * 100 if total > 0 else 0:0.2f}%) chunks of world "{world_folder}". '
+            f'(Elapsed time: {human_readable_elapsed_time}; Freed space: {human_readable_freed_space})')
+
+        for message in messages:
+            print(message)
 
         if output_file:
             total_freed_space += raw_freed_space

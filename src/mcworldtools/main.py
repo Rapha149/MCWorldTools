@@ -1,9 +1,12 @@
+import json
 import signal
 from argparse import ArgumentParser
+from json import JSONDecodeError
 from pathlib import Path
 
 from nbt.nbt import *
 
+from .util import *
 from .tools import remove_unused_chunks, find_blocks, find_command_blocks, find_entities
 
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
@@ -41,12 +44,12 @@ def main():
         for world in args.world:
             world_folder = Path(world)
             if not world_folder.is_dir():
-                print(f'The folder "{world_folder}" does not exist.')
+                eprint(f'The folder "{world_folder}" does not exist.')
                 exit(1)
 
             absolute_folder = world_folder.resolve()
             if absolute_folder in absolute_folders:
-                print(f'The folder "{world_folder}" was stated multiple times.')
+                eprint(f'The folder "{world_folder}" was stated multiple times.')
                 exit(1)
             world_folders.append(world_folder)
             absolute_folders.append(absolute_folder)
@@ -55,9 +58,9 @@ def main():
         level_dat = Path(world_folder, 'level.dat')
         if not level_dat.is_file():
             if args.world:
-                print(f'"{world_folder}" is not a world folder.')
+                eprint(f'"{world_folder}" is not a world folder.')
             else:
-                print('Please run in a world folder or use the option "--world".')
+                eprint('Please run in a world folder or use the option "--world".')
             exit(2)
 
         level = NBTFile(fileobj=level_dat.open('rb'))
@@ -66,22 +69,28 @@ def main():
             version = f'Version: {data["Version"]["Name"]}, ' if 'Version' in data else ''
             print(f'Detected world: "{data["LevelName"]}" ({version}World folder: "{world_folder}")')
         except KeyError:
-            print(f'"{world_folder}" is not a valid world folder.')
+            eprint(f'"{world_folder}" is not a valid world folder.')
             exit(2)
 
     output_file = None
     if args.output_file:
         output_file = Path(args.output_file)
         if output_file.is_dir():
-            print(f'The output file "{output_file}" is a folder.')
+            eprint(f'The output file "{output_file}" is a folder.')
             exit(1)
 
-    input_file = None
+    input_data = None
     if args.input_file:
         input_file = Path(args.input_file)
-        if input_file.is_dir():
-            print(f'The input file "{input_file}" is a folder.')
+        if not input_file.is_file():
+            eprint(f'The input file "{input_file}" does not exist or is a folder.')
             exit(1)
+        with input_file.open('r') as file:
+            try:
+                input_data = json.load(file)
+            except JSONDecodeError:
+                eprint(f'The input file "{input_file}" does not have valid json content.')
+                exit(1)
 
     print()
     tool = args.tool
@@ -111,13 +120,13 @@ def main():
     print(f'Using tool "{available_tools[tool - 1]}"')
 
     if tool == 1:
-        remove_unused_chunks.start(world_folders, output_file, args.output_format, args.confirm)
+        remove_unused_chunks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 2:
-        find_blocks.start(world_folders, output_file, args.output_format, input_file, args.confirm)
+        find_blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 3:
-        find_command_blocks.start(world_folders, output_file, args.output_format, input_file, args.confirm)
+        find_command_blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 4:
-        find_entities.start(world_folders, output_file, args.output_format, input_file, args.confirm)
+        find_entities.start(world_folders, output_file, args.output_format, input_data, args.confirm)
 
 
 if __name__ == '__main__':
