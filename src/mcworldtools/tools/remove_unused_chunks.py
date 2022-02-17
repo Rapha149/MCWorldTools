@@ -17,7 +17,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         print('\nLoading input file data...')
         inhabited_time = input_data['inhabited_time']
         if type(inhabited_time) is not int:
-            eprint(f'Inhabited time has to be a number but is "{inhabited_time}".')
+            eprint(f'"inhabited_time" has to be a number but is {type(inhabited_time).__name__}.')
             exit(3)
         print(f'Using "{inhabited_time}" as inhabited time.')
 
@@ -27,12 +27,10 @@ def start(world_folders, output_file, output_format, input_data, confirm):
               '\nIt is recommended to make a backup of your world beforehand.'
               '\nNo further confirmation requests will be made before chunks are removed.')
         while True:
-            answer = input('Do you want to continue? (y/N): ')
-            if not answer or answer.lower() == 'n':
-                exit()
-            elif answer.lower() != 'y':
-                print('Please state "y" or "n".')
-            else:
+            answer = parse_yes_no(input('Do you want to continue? (y/N): '), default=False)
+            if answer is not None:
+                if not answer:
+                    exit()
                 break
 
     total_start_time = time.time()

@@ -5,6 +5,17 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
+def parse_yes_no(answer, default=None):
+    if not answer:
+        return default
+    if answer.lower() == "y":
+        return True
+    if answer.lower() == "n":
+        return False
+    print("Please state \"y\" or \"n\"")
+    return None
+
+
 def list_files(folders):
     files = []
     for folder in folders:
