@@ -12,14 +12,31 @@ possible_region_folders = ('region', 'DIM-1/region', 'DIM1/region')
 
 
 def start(world_folders, output_file, output_format, input_data, confirm):
-    inhabited_time = 0
+    inhabited_time = None
     if input_data and 'inhabited_time' in input_data:
         print('\nLoading input file data...')
         inhabited_time = input_data['inhabited_time']
         if type(inhabited_time) is not int:
             eprint(f'"inhabited_time" has to be a number but is {type(inhabited_time).__name__}.')
             exit(3)
-        print(f'Using "{inhabited_time}" as inhabited time.')
+        print(f'Using {inhabited_time} seconds as inhabited time.')
+
+    if not inhabited_time:
+        print('\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Defaults to 0, leave empty for default)')
+        while True:
+            answer = input('Maximal inhabited time: ')
+            if not answer:
+                break
+
+            if answer.isnumeric():
+                inhabited_time = int(answer)
+                if inhabited_time >= 0:
+                    break
+                else:
+                    print('Please state a positive number.')
+            else:
+                print('Please state a number.')
+    inhabited_time = inhabited_time * 20 if inhabited_time else 0
 
     if not confirm:
         print('\nWarning: This operation will remove all chunks in which no player was present.'
