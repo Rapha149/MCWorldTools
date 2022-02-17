@@ -7,7 +7,7 @@ from pathlib import Path
 from nbt.nbt import *
 
 from .util import *
-from .tools import remove_unused_chunks, find_blocks, find_command_blocks, find_entities
+from .tools import remove_unused_chunks, blocks, command_blocks, entities
 
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
 
@@ -20,13 +20,14 @@ def sigint_handler():
 def main():
     signal.signal(signal.SIGINT, lambda s, frame: sigint_handler())
 
+    tool_count = len(available_tools)
     parser = ArgumentParser(prog='mcworldtools',
                             description='MCWorldTools by Rapha149',
                             allow_abbrev=False)
     parser.add_argument('-w', '--world', action='append',
                         help='Use a different world folder than the current working directory.'
                              '\nYou can provide this option multiple times for multiple words')
-    parser.add_argument('-t', '--tool', type=int, choices=range(1, len(available_tools) + 1),
+    parser.add_argument('-t', '--tool', type=int, choices=range(1, tool_count + 1),
                         help='Choose the tool you want to use beforehand')
     parser.add_argument('-o', '--output_file', help='Select a file to write the output statistics to.'
                                                     '\nThis option is mandatory when using tools that search for something.')
@@ -95,15 +96,13 @@ def main():
     print()
     tool = args.tool
     if not tool:
-        print('Select which tool you want to use.'
-              '\n1. Remove unused chunks'
-              '\n2. Find blocks'
-              '\n3. Find command blocks'
-              '\n4. Find entities'
-              '\nc. Cancel')
-
+        print('Select which tool you want to use.')
+        for i in range(tool_count):
+            print(f'{i + 1}. {available_tools[i]}')
+        print('c. Cancel')
+        
         while True:
-            answer = input('Select a tool (1-4, c): ')
+            answer = input(f'Select a tool (1-{tool_count}, c): ')
             if answer == 'c':
                 print('Exiting')
                 exit()
@@ -113,8 +112,8 @@ def main():
                 continue
 
             tool = int(answer)
-            if tool < 1 or tool > 4:
-                print('Please state a number between 1 and 4.')
+            if tool < 1 or tool > tool_count:
+                print(f'Please state a number between 1 and {tool_count}.')
                 continue
             break
     print(f'Using tool "{available_tools[tool - 1]}"')
@@ -122,11 +121,11 @@ def main():
     if tool == 1:
         remove_unused_chunks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 2:
-        find_blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
+        blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 3:
-        find_command_blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
+        command_blocks.start(world_folders, output_file, args.output_format, input_data, args.confirm)
     elif tool == 4:
-        find_entities.start(world_folders, output_file, args.output_format, input_data, args.confirm)
+        entities.start(world_folders, output_file, args.output_format, input_data, args.confirm)
 
 
 if __name__ == '__main__':

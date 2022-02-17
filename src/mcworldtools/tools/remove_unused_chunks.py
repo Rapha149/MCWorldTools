@@ -1,14 +1,11 @@
 import json
 import re
-from pathlib import Path
 
 import yaml
 from nbt.region import *
 from tqdm import tqdm
 
 from ..util import *
-
-possible_region_folders = ('region', 'DIM-1/region', 'DIM1/region')
 
 
 def start(world_folders, output_file, output_format, input_data, confirm):
@@ -22,7 +19,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         print(f'Using {inhabited_time} seconds as inhabited time.')
 
     if not inhabited_time:
-        print('\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Defaults to 0, leave empty for default)')
+        print('\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Leave empty for 0)')
         while True:
             answer = input('Maximal inhabited time: ')
             if not answer:
@@ -54,8 +51,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
     total_freed_space = 0
     worlds = {}
     for world_folder in world_folders:
-        region_folders = [region_folder for region_folder in
-                          [Path(world_folder, folder) for folder in possible_region_folders] if region_folder.is_dir()]
+        region_folders = get_region_folders(world_folder)
         if not region_folders:
             print(f'\nNo region folder was found in world "{world_folder}"')
             continue
@@ -78,9 +74,9 @@ def start(world_folders, output_file, output_format, input_data, confirm):
             for region_file in files:
                 with region_file.open('r+b') as file:
                     region = RegionFile(fileobj=file)
-                    result = re.match('r\\.(-?\\d+)\\.(-?\\d+)\\.mca', region_file.name)
-                    if result:
-                        region.loc = Location(x=int(result.group(1)), z=int(result.group(2)))
+                    match = re.match('r\\.(-?\\d+)\\.(-?\\d+)\\.mca', region_file.name)
+                    if match:
+                        region.loc = Location(x=int(match.group(1)), z=int(match.group(2)))
 
                     chunk_count = region.chunk_count()
 
@@ -176,16 +172,19 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                            f'\n\u00B7\u00B7\u00B7 Remove unused chunks \u00B7\u00B7\u00B7'
                            f'\n\nTotal elapsed time: {human_readable_elapsed_time}'
                            f'\nTotal freed space: {human_readable_freed_space}'
-                           f'\n\n[ Worlds ]' +
-                           ('\n'.join([f'\n{world}'
-                                       f'\n    Chunks'
-                                       f'\n        Removed: {info["chunks"]["removed"]}'
-                                       f'\n        Total: {info["chunks"]["total"]}'
-                                       f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}'
-                                       f'\n    Freed space: {info["freed_space"]["human_readable"]}'
-                                       for world, info in worlds.items()])))
+                           f'\n\n[ Worlds ]')
+                for world, info in worlds.items():
+                    file.write(f'\n{world}'
+                               f'\n    Chunks'
+                               f'\n        Removed: {info["chunks"]["removed"]}'
+                               f'\n        Total: {info["chunks"]["total"]}'
+                               f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}'
+                               f'\n    Freed space: {info["freed_space"]["human_readable"]}'
+                               f'\n')
+
             elif output_format == 'json':
                 json.dump(data, file, indent=3)
             elif output_format == 'yaml':
                 yaml.dump(data, file, indent=3)
+
             print(f'\nSaved output to "{output_file}"')

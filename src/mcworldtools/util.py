@@ -1,4 +1,7 @@
 import sys
+from pathlib import Path
+
+possible_region_folders = ('region', 'DIM-1/region', 'DIM1/region')
 
 
 def eprint(*args, **kwargs):
@@ -27,6 +30,11 @@ def list_files(folders):
 
 def get_size(files):
     return sum(file.stat().st_size for file in files)
+
+
+def get_region_folders(world_folder):
+    return [region_folder for region_folder in [Path(world_folder, folder) for folder in possible_region_folders] if
+            region_folder.is_dir()]
 
 
 def format_time(input_time):
