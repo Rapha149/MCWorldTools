@@ -2,13 +2,13 @@ import json
 import signal
 from argparse import ArgumentParser
 from json import JSONDecodeError
-from pathlib import Path
 
 from nbt.nbt import *
 
-from .util import *
 from .tools import remove_unused_chunks, blocks, command_blocks, entities
+from .util import *
 
+current_version = '1.1.1'
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
 
 
@@ -22,8 +22,9 @@ def main():
 
     tool_count = len(available_tools)
     parser = ArgumentParser(prog='mcworldtools',
-                            description='MCWorldTools by Rapha149',
+                            description='--- MCWorldTools by Rapha149 ---',
                             allow_abbrev=False)
+    parser.add_argument('-v', '--version', action='store_true', help='show the installed version and exit.')
     parser.add_argument('-w', '--world', action='append',
                         help='Use a different world folder than the current working directory.'
                              '\nYou can provide this option multiple times for multiple words')
@@ -37,6 +38,11 @@ def main():
                                                    '\nSee the Github page for more information: https://github.com/Rapha149/MCWorldTools#input-files')
     parser.add_argument('--confirm', action='store_true', help='Automatically confirm any confirmation requests')
     args = parser.parse_args()
+
+    print('--- MCWorldTools by Rapha149 ---')
+    if args.version:
+        print(f'Installed version: {current_version}')
+        exit()
 
     if not args.world:
         world_folders = [Path.cwd()]

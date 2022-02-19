@@ -1,2 +1,2 @@
 def start(world_folder, output_file, output_format, input_file, confirm):
-    pass
+    print('This tool is currently in development.')
