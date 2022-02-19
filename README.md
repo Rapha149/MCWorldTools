@@ -24,7 +24,8 @@ Doing so may lead to unintended consequences. I do NOT take any responsibility f
 ```mcworldtools [-h] [-w WORLD] [-t TOOL] [-o OUTPUT_FILE] [-f {plain,json,yaml}] [--confirm]```
 
 ### Arguments
-- `-h --help` Show the help message and exit
+- `-h --help` Show the help message and exit.
+- `-v --version` Show the installed version and exit.
 - `-w WORLD, --world WORLD` Use a different world folder than the current working directory. You can provide this option multiple times for multiple words.
 - `-t TOOL, --tool TOOL` Choose the tool to use beforehand.
 - `-o OUTPUT_FILE, --output-file OUTPUT_FILE` Select a file to write the output statistics to. This option is mandatory when searching for something.
