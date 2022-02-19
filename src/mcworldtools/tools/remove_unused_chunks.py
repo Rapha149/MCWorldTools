@@ -37,7 +37,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
     inhabited_time = inhabited_time * 20 if inhabited_time else 0
 
     if not confirm:
-        print('\nWarning: This operation will remove all chunks in which no player was present.'
+        print('\nWarning: This operation will remove all chunks in which no player was present for the given time.'
               '\nTherefore, chunks with changed blocks may be removed since players can change blocks even if they '
               'are not in the chunk.'
               '\nIt is recommended to make a backup of your world beforehand.'
