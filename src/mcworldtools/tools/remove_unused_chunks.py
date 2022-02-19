@@ -19,7 +19,8 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         print(f'Using {inhabited_time} seconds as inhabited time.')
 
     if not inhabited_time:
-        print('\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Leave empty for 0)')
+        print(
+            '\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Leave empty for 0)')
         while True:
             answer = input('Maximal inhabited time: ')
             if not answer:
@@ -37,7 +38,8 @@ def start(world_folders, output_file, output_format, input_data, confirm):
 
     if not confirm:
         print('\nWarning: This operation will remove all chunks in which no player was present.'
-              '\nTherefore, chunks with changed blocks may be removed since players can change blocks even if they are not in the chunk.'
+              '\nTherefore, chunks with changed blocks may be removed since players can change blocks even if they '
+              'are not in the chunk.'
               '\nIt is recommended to make a backup of your world beforehand.'
               '\nNo further confirmation requests will be made before chunks are removed.')
         while True:
@@ -56,9 +58,10 @@ def start(world_folders, output_file, output_format, input_data, confirm):
             print(f'\nNo region folder was found in world "{world_folder}"')
             continue
 
-        files = list_files(region_folders)
-        file_count = len(files)
-        size = get_size(files)
+        files = map_files(region_folders)
+        all_files = get_all_files(files)
+        file_count = len(all_files)
+        size = get_size(all_files)
 
         count, total = 0, 0
         start_time = time.time()
@@ -71,45 +74,48 @@ def start(world_folders, output_file, output_format, input_data, confirm):
             if file_count <= 0:
                 pbar.update(1)
 
-            for region_file in files:
-                with region_file.open('r+b') as file:
-                    region = RegionFile(fileobj=file)
-                    match = re.match('r\\.(-?\\d+)\\.(-?\\d+)\\.mca', region_file.name)
-                    if match:
-                        region.loc = Location(x=int(match.group(1)), z=int(match.group(2)))
+            for dimension, region_files in files.items():
+                for region_file in region_files:
+                    with region_file.open('r+b') as file:
+                        region = RegionFile(fileobj=file)
+                        match = re.match('r\\.(-?\\d+)\\.(-?\\d+)\\.mca', region_file.name)
+                        if match:
+                            region.loc = Location(x=int(match.group(1)), z=int(match.group(2)))
 
-                    chunk_count = region.chunk_count()
+                        chunk_count = region.chunk_count()
 
-                    total += chunk_count
-                    pbar.update(32 * 32 * 2 - chunk_count * 2)
+                        total += chunk_count
+                        pbar.update(32 * 32 * 2 - chunk_count * 2)
 
-                    delete = []
-                    for coords in region.get_chunk_coords():
-                        x, z, = coords['x'], coords['z']
-                        chunk = region.get_chunk(x, z)
-                        data = chunk['Level'] if 'Level' in chunk else chunk
+                        delete = []
+                        for coords in region.get_chunk_coords():
+                            x, z, = coords['x'], coords['z']
+                            chunk = region.get_chunk(x, z)
+                            data = chunk['Level'] if 'Level' in chunk else chunk
 
-                        if 'InhabitedTime' not in data:
-                            messages.append(
-                                f'Chunk {x} {z} (in world at {chunk.loc.x} {chunk.loc.z}) in the region file "{region_file.name}" could not be read.')
-                            continue
+                            if 'InhabitedTime' not in data:
+                                messages.append(
+                                    f'Chunk {x} {z} (in world at {chunk.loc.x} {chunk.loc.z}) in the region file "'
+                                    f'{region_file.name}" of the dimension "{dimension.capitalize()}" could not be '
+                                    f'read.')
+                                continue
 
-                        if data['InhabitedTime'].value <= inhabited_time:
-                            delete.append((x, z))
-                            pbar.update()
-                        else:
-                            pbar.update(2)
+                            if data['InhabitedTime'].value <= inhabited_time:
+                                delete.append((x, z))
+                                pbar.update()
+                            else:
+                                pbar.update(2)
 
-                    delete_count = len(delete)
-                    if delete_count < chunk_count:
-                        for chunk in delete:
-                            region.unlink_chunk(chunk[0], chunk[1])
-                            pbar.update()
+                        delete_count = len(delete)
+                        if delete_count < chunk_count:
+                            for chunk in delete:
+                                region.unlink_chunk(chunk[0], chunk[1])
+                                pbar.update()
 
-                count += delete_count
-                if delete_count >= chunk_count:
-                    region_file.unlink()
-                    pbar.update(delete_count)
+                    count += delete_count
+                    if delete_count >= chunk_count:
+                        region_file.unlink()
+                        pbar.update(delete_count)
 
         elapsed_time = int(round((time.time() - start_time) * 1000))
         human_readable_elapsed_time = format_time(elapsed_time)
@@ -119,7 +125,8 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         human_readable_freed_space = f'{freed_space:.2f}{freed_space_unit}'
 
         print(
-            f'Removed {count}/{total} ({count / total * 100 if total > 0 else 0:0.2f}%) chunks of world "{world_folder}". '
+            f'Removed {count}/{total} ({count / total * 100 if total > 0 else 0:0.2f}%) chunks of world "'
+            f'{world_folder}". '
             f'(Elapsed time: {human_readable_elapsed_time}; Freed space: {human_readable_freed_space})')
 
         for message in messages:
