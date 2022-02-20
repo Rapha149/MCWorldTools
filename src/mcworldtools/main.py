@@ -3,12 +3,10 @@ import signal
 from argparse import ArgumentParser
 from json import JSONDecodeError
 
-from nbt.nbt import *
-
 from .tools import remove_unused_chunks, blocks, command_blocks, entities
 from .util import *
 
-current_version = '1.1.1'
+current_version = '1.2.0'
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
 
 
