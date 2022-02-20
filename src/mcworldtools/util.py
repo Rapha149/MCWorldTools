@@ -53,9 +53,8 @@ def list_files(folders):
     files = []
     for folder in folders:
         for file in folder.iterdir():
-            if __name__ == '__main__':
-                if file.is_file() and file.name.endswith('.mca'):
-                    files.append(file)
+            if file.is_file() and file.name.endswith('.mca'):
+                files.append(file)
     return files
 
 
