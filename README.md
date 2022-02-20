@@ -55,12 +55,19 @@ Here is what you can change with these input files:
 - `inhabited_time` - The time for how long a player may have been in a chunk for it to be deleted (in seconds). Defaults to 0.
 
 #### Find/remove command blocks
+##### Possibility 1: Finding command blocks
 ```json
 {
   "action": 1,
-  "only_executing": false
+  "only_executing": false,
+  "dimension": "overworld"
 }
 ```
+- `action` - `1` for finding command blocks.
+- `only_executing` - If enabled, only command blocks that are either powered or in automatic mode will be found.
+- `dimension` - The dimension in which command blocks should be searched. Set to `null` for all dimensions. See [dimension notes](#dimension-notes) for more information.
+
+##### Possibility 2: Removing command blocks
 ```json
 {
   "action": 2,
@@ -80,6 +87,54 @@ Here is what you can change with these input files:
   ]
 }
 ```
-- `action` - `1` for finding command blocks and `2` for removing command blocks.
-- `only_executing` - Only used when finding command blocks. If enabled, only command blocks that are either powered or in automatic mode will be found.
-- `locations` - Only used when removing command blocks. A list of locations where command blocks should be removed. For `dimension` see the [dimension notes](#dimension-notes).
+- `action` - `2` for removing command blocks.
+- `locations` - A list of locations where command blocks should be removed. For `dimension` see the [dimension notes](#dimension-notes).
+
+#### Find/remove entities
+##### Possibility 1: Finding entities
+```json
+{
+  "action": 1,
+  "id": "minecraft:zombie",
+  "dimension": "overworld",
+  "nbt_keys": ["OnGround", "Age"]
+}
+```
+- `action` - `1` for finding entities.
+- `id` - The entity id to filter entities. Set to `null` for all entities. You don't have to prepend it with `minecraft:`
+- `dimension` - The dimension in which entities should be searched. Set to `null` for all dimensions. See [dimension notes](#dimension-notes) for more information.
+- `nbt_keys` - A list of NBT keys to be included in the output. Set to `[]` (empty list) for all NBT keys. Set to `null` to not include any NBT keys.
+
+##### Possibility 2: Removing entities by id
+```json
+{
+  "action": 2,
+  "remove_by": "id",
+  "id": "minecraft:zombie"
+}
+```
+- `action` - `2` for removing entities.
+- `remove_by` - `id` for removing by id.
+- `id` - The id of which entities should be removed.
+
+##### Possibility 3: Removing entities by uuid
+```json
+{
+  "action": 2,
+  "remove_by": "uuid",
+  "uuid": "325cdf04-8211-4f7d-8a47-79b291c1ca77"
+}
+```
+- `action` - `2` for removing entities.
+- `remove_by` - `uuid` for removing by uuid.
+- `uuid` - The uuid of the entity to remove.
+
+##### Possibility 4: Removing all entities
+```json
+{
+  "action": 2,
+  "remove_by": "all"
+}
+```
+- `action` - `2` for removing entities.
+- `remove_by` - `all` for removing all entities.

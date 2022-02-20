@@ -17,7 +17,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
     if input_data and 'action' in input_data:
         print('\nLoading input file data...')
         action = input_data['action']
-        if type(action) is not int:
+        if not isinstance(action, int):
             eprint(f'"action" has to be a number but is {type(action).__name__}')
             exit(3)
         if action < 1 or action > action_count:
@@ -31,7 +31,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
             print(f'{i + 1}. {actions[i]}')
 
         while True:
-            answer = input(f'Select a tool (1-{action_count}): ')
+            answer = input(f'Select an action (1-{action_count}): ')
             if not answer.isnumeric():
                 print('Please state a number.')
                 continue
@@ -44,29 +44,66 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         print(f'Using action "{actions[action - 1]}"')
 
     if action == 1:
-        find(world_folders, input_data, output_file, output_format)
+        find(world_folders, output_file, output_format, input_data)
     elif action == 2:
-        remove(world_folders, input_data, output_file, output_format, confirm)
+        remove(world_folders, output_file, output_format, input_data, confirm)
 
 
-def find(world_folders, input_data, output_file, output_format):
+def find(world_folders, output_file, output_format, input_data):
     if not output_file:
         print(f'\nFor this action you have to state an output file as command argument (-o).')
         exit(4)
 
-    only_executing = None
-    if input_data and 'only_executing' in input_data:
+    limit_to_dimension, limit_dimension, only_executing = None, None, None
+    if input_data:
         print('\nLoading more input file data...')
-        only_executing = input_data['only_executing']
-        if type(only_executing) is not bool:
-            eprint(f'"only_executing" has to be bool (true/false) but is {type(only_executing).__name__}')
-            exit(3)
-        print(f'The script will {"" if only_executing else "not"} only look for executing command blocks.')
+        if 'only_executing' in input_data:
+            only_executing = input_data['only_executing']
+            if not isinstance(only_executing, bool):
+                eprint(f'"only_executing" has to be bool (true/false) but is {type(only_executing).__name__}')
+                exit(3)
+            print(f'The script will {"" if only_executing else "not"} only look for executing command blocks.')
+
+        if 'dimension' in input_data:
+            limit_dimension = input_data['dimension']
+            if limit_dimension is None:
+                limit_to_dimension = False
+                print(f'Not limiting to one dimension.')
+            else:
+                if not isinstance(limit_dimension, str):
+                    eprint(f'"dimension" has to be text but is {type(limit_dimension).__name__}')
+                    exit(3)
+                limit_to_dimension = True
+                limit_dimension = limit_dimension.lower()
+                if limit_dimension not in dimensions:
+                    eprint(f'Unknown dimension "{limit_dimension}"')
+                    exit(3)
+                print(f'Limiting to dimension "{limit_dimension}"')
 
     if only_executing is None:
         print('\nDo you want to only search for executing command blocks? (i.e. either powered or auto)'
               '\nOnly supported in 1.9+')
         only_executing = parse_yes_no(input('Only search for executing command blocks? (y/N): '), default=False)
+
+    if limit_to_dimension is None:
+        dimensions_str = '"' + '", "'.join(dimensions) + '"'
+        print('\nChoose a dimension where entities should be searched. Enter nothing for all dimensions.'
+              f'\nIt can be one of {dimensions_str}')
+        complete(dimensions, case_insensitive=True)
+        while True:
+            answer = input('Dimension: ')
+            if not answer:
+                limit_to_dimension = False
+                break
+            else:
+                answer = answer.strip().lower()
+                if answer not in dimensions:
+                    print('Unknown dimension.')
+                    continue
+                limit_to_dimension = True
+                limit_dimension = answer
+                break
+        complete([])
 
     total_start_time = time.time()
     total_command_blocks = 0
@@ -91,7 +128,12 @@ def find(world_folders, input_data, output_file, output_format):
             if file_count <= 0:
                 pbar.update()
 
-            for dimension, region_files in files.items():
+            for dimension in dimensions:
+                region_files = files[dimension]
+                if limit_to_dimension and dimension != limit_dimension:
+                    pbar.update(32 * 32 * len(region_files))
+                    continue
+
                 for region_file in region_files:
                     with region_file.open('rb') as file:
                         region = RegionFile(fileobj=file)
@@ -112,8 +154,7 @@ def find(world_folders, input_data, output_file, output_format):
                                 block_entities = data['TileEntities']
                             else:
                                 messages.append(f'Chunk {x} {z} (in world at {world_x} {world_z}) in the region file "'
-                                                f'{region_file.name}" of the dimension "{dimension.capitalize()}" '
-                                                f'could not be read.')
+                                                f'{region_file}" could not be read.')
                                 continue
 
                             for command_block in block_entities:
@@ -160,8 +201,8 @@ def find(world_folders, input_data, output_file, output_format):
         for message in messages:
             print(message)
 
+        total_command_blocks += command_block_count
         if output_file:
-            total_command_blocks += command_block_count
             worlds[str(world_folder.resolve())] = {
                 'command_blocks': command_blocks,
                 'elapsed_time': {
@@ -234,23 +275,19 @@ def find(world_folders, input_data, output_file, output_format):
             print(f'\nSaved output to "{output_file}"')
 
 
-def remove(world_folders, input_data, output_file, output_format, confirm):
-    print(f'\nChoose locations where command blocks should be removed. Enter nothing once your finished.'
-          f'\nUse the following format for locations: "X Y Z" (e.g. 12 71 8)')
-
+def remove(world_folders, output_file, output_format, input_data, confirm):
     locations = None
-    dimensions = list(reversed(list(possible_region_folders.values())))
     if input_data and 'locations' in input_data:
         print('\nLoading more input data...')
         loc_list = input_data['locations']
-        if type(loc_list) is not list:
+        if not isinstance(loc_list, list):
             eprint(f'"locations" has to be a list but is {type(loc_list).__name__}')
             exit(3)
 
         locations = []
         for i in range(len(loc_list)):
             loc = loc_list[i]
-            if type(loc) is not dict:
+            if not isinstance(loc, dict):
                 eprint(f'{i + 1}. item in "locations" has to contain keys but is {type(loc).__name__}')
                 exit(3)
 
@@ -259,7 +296,7 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                     eprint(f'"{key}" is not in {i + 1}. item of "locations"')
                     exit(3)
                 value = loc[key]
-                if type(value) is not int:
+                if not isinstance(value, int):
                     eprint(
                         f'"{key}" in {i + 1}. item of "locations" has to be a number but is '
                         f'{type(value).__name__}')
@@ -268,7 +305,7 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                 eprint(f'"dimension" is not in {i + 1}. item of "locations"')
                 exit(3)
             dimension = loc['dimension']
-            if type(dimension) is not str:
+            if not isinstance(dimension, str):
                 eprint(f'"dimension" in {i + 1}. item of "locations" has to be text but is {type(dimension).__name__}')
                 exit(3)
             dimension = dimension.lower()
@@ -318,6 +355,7 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                 'y': int(match.group(3)),
                 'z': int(match.group(4))
             })
+    used_dimensions = [loc['dimension'] for loc in locations]
 
     if not confirm:
         print('\nWarning: This operation will remove the command blocks at the given locations permanently.'
@@ -356,6 +394,10 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                 pbar.update()
 
             for dimension, region_files in files.items():
+                if dimension not in used_dimensions:
+                    pbar.update(32 * 32 * len(region_files))
+                    continue
+
                 for region_file in region_files:
                     with region_file.open('r+b') as file:
                         region = RegionFile(fileobj=file)
@@ -376,7 +418,7 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                                 block_entities = data['TileEntities']
                             else:
                                 messages.append(f'Chunk {x} {z} (in world at {world_x} {world_z}) in the region file "'
-                                                f'{region_file.name}" could not be read.')
+                                                f'{region_file}" could not be read.')
                                 continue
 
                             to_remove = []
@@ -422,8 +464,8 @@ def remove(world_folders, input_data, output_file, output_format, confirm):
                 print(f'There is no command block at the location "{loc["dimension"].capitalize()}: {loc["x"]} '
                       f'{loc["y"]} {loc["z"]}"')
 
+        total_command_blocks += command_block_count
         if output_file:
-            total_command_blocks += command_block_count
             worlds[str(world_folder.resolve())] = {
                 'removed_command_blocks': command_block_count,
                 'locations_without_command_block': locations_without_command_block,

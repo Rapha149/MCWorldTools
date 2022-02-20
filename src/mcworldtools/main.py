@@ -3,12 +3,10 @@ import signal
 from argparse import ArgumentParser
 from json import JSONDecodeError
 
-from nbt.nbt import *
-
 from .tools import remove_unused_chunks, blocks, command_blocks, entities
 from .util import *
 
-current_version = '1.1.1'
+current_version = '1.2.0'
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
 
 
@@ -79,6 +77,7 @@ def main():
             eprint(f'"{world_folder}" is not a valid world folder.')
             exit(2)
 
+    print()
     output_file = None
     if args.output_file:
         output_file = Path(args.output_file)
@@ -99,7 +98,6 @@ def main():
                 eprint(f'The input file "{input_file}" does not have valid json content.')
                 exit(1)
 
-    print()
     tool = args.tool
     if not tool:
         print('Select which tool you want to use.')
