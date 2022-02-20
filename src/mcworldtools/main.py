@@ -79,6 +79,7 @@ def main():
             eprint(f'"{world_folder}" is not a valid world folder.')
             exit(2)
 
+    print()
     output_file = None
     if args.output_file:
         output_file = Path(args.output_file)
@@ -99,7 +100,6 @@ def main():
                 eprint(f'The input file "{input_file}" does not have valid json content.')
                 exit(1)
 
-    print()
     tool = args.tool
     if not tool:
         print('Select which tool you want to use.')

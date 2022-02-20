@@ -13,7 +13,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
     if input_data and 'inhabited_time' in input_data:
         print('\nLoading input file data...')
         inhabited_time = input_data['inhabited_time']
-        if type(inhabited_time) is not int:
+        if not isinstance(inhabited_time, int):
             eprint(f'"inhabited_time" has to be a number but is {type(inhabited_time).__name__}.')
             exit(3)
         print(f'Using {inhabited_time} seconds as inhabited time.')
@@ -96,8 +96,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                             if 'InhabitedTime' not in data:
                                 messages.append(
                                     f'Chunk {x} {z} (in world at {chunk.loc.x} {chunk.loc.z}) in the region file "'
-                                    f'{region_file.name}" of the dimension "{dimension.capitalize()}" could not be '
-                                    f'read.')
+                                    f'{region_file}" could not be read.')
                                 continue
 
                             if data['InhabitedTime'].value <= inhabited_time:
@@ -132,8 +131,8 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         for message in messages:
             print(message)
 
+        total_freed_space += raw_freed_space
         if output_file:
-            total_freed_space += raw_freed_space
             worlds[str(world_folder.resolve())] = {
                 'chunks': {
                     'removed': count,
