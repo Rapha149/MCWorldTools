@@ -363,7 +363,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
             print(f'Using uuid "{uuid}"')
 
     if remove_by == 'id' and not entity_id:
-        print('\nChoose an entity id for which entities should be removed.')
+        print('\nChoose an entity id of which entities should be removed.')
         while True:
             answer = input('Entity id: ')
             if not answer:
