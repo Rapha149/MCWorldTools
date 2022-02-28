@@ -177,6 +177,9 @@ def find(world_folders, output_file, output_format, input_data):
                 pbar.update()
 
             for dimension in dimensions:
+                if dimension not in files:
+                    continue
+
                 region_files = files[dimension]
                 if limit_to_dimension and dimension != limit_dimension:
                     pbar.update(32 * 32 * len(region_files))
