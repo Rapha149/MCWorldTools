@@ -6,7 +6,7 @@ from json import JSONDecodeError
 from .tools import remove_unused_chunks, blocks, command_blocks, entities
 from .util import *
 
-current_version = '1.2.3'
+current_version = '1.2.4'
 available_tools = ('Remove unused chunks', 'Remove/Find blocks', 'Remove/Find command blocks', 'Remove/Find entities')
 
 
