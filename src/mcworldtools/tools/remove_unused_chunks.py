@@ -50,7 +50,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                 break
 
     total_start_time = time.time()
-    total_freed_space = 0
+    total_removed, total_chunks, total_not_readable_chunks, total_freed_space = 0, 0, 0, 0
     worlds = {}
     for world_folder in world_folders:
         region_folders = get_region_folders(world_folder)
@@ -63,7 +63,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         file_count = len(all_files)
         size = get_size(all_files)
 
-        count, total = 0, 0
+        count, total, not_readable_chunks = 0, 0, 0
         start_time = time.time()
         messages = []
         print(f'\nRemoving unused chunks of world "{world_folder}"...')
@@ -90,7 +90,13 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                         delete = []
                         for coords in region.get_chunk_coords():
                             x, z, = coords['x'], coords['z']
-                            chunk = region.get_chunk(x, z)
+                            try:
+                                chunk = region.get_chunk(x, z)
+                            except ChunkDataError:
+                                not_readable_chunks += 1
+                                pbar.update(2)
+                                continue
+
                             data = chunk['Level'] if 'Level' in chunk else chunk
 
                             if 'InhabitedTime' not in data:
@@ -131,12 +137,20 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         for message in messages:
             print(message)
 
+        if not_readable_chunks:
+            print(f'{not_readable_chunks} chunks could not be read.')
+
+        total_removed += count
+        total_chunks += total
+        total_not_readable_chunks += not_readable_chunks
         total_freed_space += raw_freed_space
+
         if output_file:
             worlds[str(world_folder.resolve())] = {
                 'chunks': {
                     'removed': count,
-                    'total': total
+                    'total': total,
+                    'not_readable': not_readable_chunks
                 },
                 'elapsed_time': {
                     'raw': elapsed_time,
@@ -161,6 +175,11 @@ def start(world_folders, output_file, output_format, input_data, confirm):
         data = {
             'worlds': worlds,
             'total': {
+                'chunks': {
+                    'removed': total_removed,
+                    'total': total_chunks,
+                    'not_readable': total_not_readable_chunks
+                },
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -178,13 +197,21 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                            f'\n\u00B7\u00B7\u00B7 Remove unused chunks \u00B7\u00B7\u00B7'
                            f'\n\nTotal elapsed time: {human_readable_elapsed_time}'
                            f'\nTotal freed space: {human_readable_freed_space}'
-                           f'\n\n[ Worlds ]')
+                           f'\nChunks'
+                           f'\n    Removed: {total_removed}'
+                           f'\n    Total: {total_chunks}')
+                if total_not_readable_chunks:
+                    file.write(f'\n    Not readable: {total_not_readable_chunks}')
+
+                file.write(f'\n\n[ Worlds ]')
                 for world, info in worlds.items():
                     file.write(f'\n{world}'
                                f'\n    Chunks'
                                f'\n        Removed: {info["chunks"]["removed"]}'
-                               f'\n        Total: {info["chunks"]["total"]}'
-                               f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}'
+                               f'\n        Total: {info["chunks"]["total"]}')
+                    if info['chunks']['not_readable']:
+                        file.write(f'\n        Not readable: {info["chunks"]["not_readable"]}')
+                    file.write(f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}'
                                f'\n    Freed space: {info["freed_space"]["human_readable"]}'
                                f'\n')
 

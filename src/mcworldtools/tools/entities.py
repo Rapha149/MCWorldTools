@@ -154,7 +154,7 @@ def find(world_folders, output_file, output_format, input_data):
             nbt_keys.append(answer)
 
     total_start_time = time.time()
-    total_entities = 0
+    total_entities, total_not_readable_chunks = 0, 0
     worlds = {}
     for world_folder in world_folders:
         entity_folders = get_entity_folders(world_folder)
@@ -168,6 +168,7 @@ def find(world_folders, output_file, output_format, input_data):
         entities = []
         start_time = time.time()
         messages = []
+        not_readable_chunks = 0
         print(f'\nSearching for entities in world "{world_folder}"...')
         with tqdm(total=file_count * 32 * 32 if file_count > 0 else 1,
                   unit_scale=1 / 32 / 32,
@@ -195,7 +196,13 @@ def find(world_folders, output_file, output_format, input_data):
                         pbar.update(32 * 32 - region.chunk_count())
                         for coords in region.get_chunk_coords():
                             x, z = coords['x'], coords['z']
-                            chunk = region.get_chunk(x, z)
+                            try:
+                                chunk = region.get_chunk(x, z)
+                            except ChunkDataError:
+                                not_readable_chunks += 1
+                                pbar.update()
+                                continue
+
                             world_x, world_z = chunk.loc.x, chunk.loc.z
                             data = chunk['Level'] if 'Level' in chunk else chunk
 
@@ -242,10 +249,16 @@ def find(world_folders, output_file, output_format, input_data):
         for message in messages:
             print(message)
 
+        if not_readable_chunks:
+            print(f'{not_readable_chunks} chunks could not be read.')
+
         total_entities += entity_count
+        total_not_readable_chunks += not_readable_chunks
+
         if output_file:
             worlds[str(world_folder.resolve())] = {
                 'entities': entities,
+                'not_readable_chunks': not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -263,7 +276,8 @@ def find(world_folders, output_file, output_format, input_data):
         data = {
             'worlds': worlds,
             'total': {
-                'total_entities': total_entities,
+                'entities': total_entities,
+                'not_readable_chunks': total_not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -276,14 +290,20 @@ def find(world_folders, output_file, output_format, input_data):
                 file.write(f'--- MCWorldTools by Rapha149 ---'
                            f'\n\u00B7\u00B7\u00B7 Find entities \u00B7\u00B7\u00B7'
                            f'\n\nTotal found entities: {total_entities}'
-                           f'\nTotal elapsed time: {human_readable_elapsed_time}'
-                           f'\n\n[ Worlds ]')
+                           f'\nTotal elapsed time: {human_readable_elapsed_time}')
+                if total_not_readable_chunks:
+                    print(f'\nTotal not readable chunks: {total_not_readable_chunks}')
+
+                file.write(f'\n\n[ Worlds ]')
                 for world, info in worlds.items():
                     entities = info['entities']
                     entity_count = len(entities)
                     file.write(f'\n{world}'
                                f'\n    Entities found: {entity_count}'
                                f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}')
+                    if info['not_readable_chunks']:
+                        file.write(f'\n    Not readable chunks: {info["not_readable_chunks"]}')
+
                     if entities:
                         file.write('\n    Entities:')
                         for i in range(entity_count):
@@ -414,7 +434,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                 break
 
     total_start_time = time.time()
-    total_entities = 0
+    total_entities, total_not_readable_chunks = 0, 0
     worlds = {}
     for world_folder in world_folders:
         entity_folders = get_entity_folders(world_folder)
@@ -426,7 +446,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
         file_count = len(get_all_files(files))
 
         start_time = time.time()
-        entity_count = 0
+        entity_count, not_readable_chunks = 0, 0
         messages = []
         print(f'\nRemoving entities in world "{world_folder}"...')
         with tqdm(total=file_count * 32 * 32 if file_count > 0 else 1,
@@ -447,7 +467,13 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                         pbar.update(32 * 32 - region.chunk_count())
                         for coords in region.get_chunk_coords():
                             x, z = coords['x'], coords['z']
-                            chunk = region.get_chunk(x, z)
+                            try:
+                                chunk = region.get_chunk(x, z)
+                            except ChunkDataError:
+                                not_readable_chunks += 1
+                                pbar.update()
+                                continue
+
                             world_x, world_z = chunk.loc.x, chunk.loc.z
                             data = chunk['Level'] if 'Level' in chunk else chunk
 
@@ -492,10 +518,16 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
         for message in messages:
             print(message)
 
+        if not_readable_chunks:
+            print(f'{not_readable_chunks} chunks could not be read.')
+
         total_entities += entity_count
+        total_not_readable_chunks += not_readable_chunks
+
         if output_file:
             worlds[str(world_folder.resolve())] = {
                 'removed_entities': entity_count,
+                'not_readable_chunks': not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -513,7 +545,8 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
         data = {
             'worlds': worlds,
             'total': {
-                'total_removed_entities': total_entities,
+                'removed_entities': total_entities,
+                'not_readable_chunks': total_not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -526,12 +559,18 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                 file.write(f'--- MCWorldTools by Rapha149 ---'
                            f'\n\u00B7\u00B7\u00B7 Remove entities \u00B7\u00B7\u00B7'
                            f'\n\nTotal removed entities: {total_entities}'
-                           f'\nTotal elapsed time: {human_readable_elapsed_time}'
-                           f'\n\n[ Worlds ]')
+                           f'\nTotal elapsed time: {human_readable_elapsed_time}')
+                if total_not_readable_chunks:
+                    file.write(f'\nTotal not readable chunks: {total_not_readable_chunks}')
+
+                file.write(f'\n\n[ Worlds ]')
                 for world, info in worlds.items():
                     file.write(f'\n{world}'
                                f'\n    Removed entities: {info["removed_entities"]}'
-                               f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}\n')
+                               f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}')
+                    if info['not_readable_chunks']:
+                        file.write(f'\n    Not readable chunks: {info["not_readable_chunks"]}')
+                    file.write('\n')
 
             elif output_format == 'json':
                 json.dump(data, file, indent=3)

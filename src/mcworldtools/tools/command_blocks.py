@@ -106,7 +106,7 @@ def find(world_folders, output_file, output_format, input_data):
         complete([])
 
     total_start_time = time.time()
-    total_command_blocks = 0
+    total_command_blocks, total_not_readable_chunks = 0, 0
     worlds = {}
     for world_folder in world_folders:
         region_folders = get_region_folders(world_folder)
@@ -120,6 +120,7 @@ def find(world_folders, output_file, output_format, input_data):
         command_blocks = []
         start_time = time.time()
         messages = []
+        not_readable_chunks = 0
         print(f'\nSearching for command blocks in world "{world_folder}"...')
         with tqdm(total=file_count * 32 * 32 if file_count > 0 else 1,
                   unit_scale=1 / 32 / 32,
@@ -147,7 +148,13 @@ def find(world_folders, output_file, output_format, input_data):
                         pbar.update(32 * 32 - region.chunk_count())
                         for coords in region.get_chunk_coords():
                             x, z = coords['x'], coords['z']
-                            chunk = region.get_chunk(x, z)
+                            try:
+                                chunk = region.get_chunk(x, z)
+                            except ChunkDataError:
+                                not_readable_chunks += 1
+                                pbar.update()
+                                continue
+
                             world_x, world_z = chunk.loc.x, chunk.loc.z
                             data = chunk['Level'] if 'Level' in chunk else chunk
 
@@ -204,10 +211,16 @@ def find(world_folders, output_file, output_format, input_data):
         for message in messages:
             print(message)
 
+        if not_readable_chunks:
+            print(f'{not_readable_chunks} chunks could not be read.')
+
         total_command_blocks += command_block_count
+        total_not_readable_chunks += not_readable_chunks
+
         if output_file:
             worlds[str(world_folder.resolve())] = {
                 'command_blocks': command_blocks,
+                'not_readable_chunks': not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -225,7 +238,8 @@ def find(world_folders, output_file, output_format, input_data):
         data = {
             'worlds': worlds,
             'total': {
-                'total_command_blocks': total_command_blocks,
+                'command_blocks': total_command_blocks,
+                'not_readable_chunks': total_not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -238,14 +252,20 @@ def find(world_folders, output_file, output_format, input_data):
                 file.write(f'--- MCWorldTools by Rapha149 ---'
                            f'\n\u00B7\u00B7\u00B7 Find command blocks \u00B7\u00B7\u00B7'
                            f'\n\nTotal found command blocks: {total_command_blocks}'
-                           f'\nTotal elapsed time: {human_readable_elapsed_time}'
-                           f'\n\n[ Worlds ]')
+                           f'\nTotal elapsed time: {human_readable_elapsed_time}')
+                if total_not_readable_chunks:
+                    file.write(f'\nTotal not readable chunks: {total_not_readable_chunks}')
+
+                file.write(f'\n\n[ Worlds ]')
                 for world, info in worlds.items():
                     command_blocks = info['command_blocks']
                     command_block_count = len(command_blocks)
                     file.write(f'\n{world}'
                                f'\n    Command blocks found: {command_block_count}'
                                f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}')
+                    if info['not_readable_chunks']:
+                        file.write(f'\n    Not readable chunks: {info["not_readable_chunks"]}')
+
                     if command_blocks:
                         file.write('\n    Command blocks:')
                         for i in range(command_block_count):
@@ -374,7 +394,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                 break
 
     total_start_time = time.time()
-    total_command_blocks = 0
+    total_command_blocks, total_not_readable_chunks = 0, 0
     worlds = {}
     for world_folder in world_folders:
         region_folders = get_region_folders(world_folder)
@@ -388,6 +408,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
         start_time = time.time()
         command_blocks = []
         messages = []
+        not_readable_chunks = 0
         print(f'\nRemoving command blocks in world "{world_folder}"...')
         with tqdm(total=file_count * 32 * 32 if file_count > 0 else 1,
                   unit_scale=1 / 32 / 32,
@@ -411,7 +432,13 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                         pbar.update(32 * 32 - region.chunk_count())
                         for coords in region.get_chunk_coords():
                             x, z = coords['x'], coords['z']
-                            chunk = region.get_chunk(x, z)
+                            try:
+                                chunk = region.get_chunk(x, z)
+                            except ChunkDataError:
+                                not_readable_chunks += 1
+                                pbar.update()
+                                continue
+
                             world_x, world_z = chunk.loc.x, chunk.loc.z
                             data = chunk['Level'] if 'Level' in chunk else chunk
 
@@ -460,6 +487,9 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
         for message in messages:
             print(message)
 
+        if not_readable_chunks:
+            print(f'{not_readable_chunks} chunks could not be read.')
+
         locations_without_command_block = []
         for loc in locations:
             if loc not in command_blocks:
@@ -468,10 +498,13 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                       f'{loc["y"]} {loc["z"]}"')
 
         total_command_blocks += command_block_count
+        total_not_readable_chunks += not_readable_chunks
+
         if output_file:
             worlds[str(world_folder.resolve())] = {
                 'removed_command_blocks': command_block_count,
                 'locations_without_command_block': locations_without_command_block,
+                'not_readable_chunks': not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -490,6 +523,7 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
             'worlds': worlds,
             'total': {
                 'total_removed_command_blocks': total_command_blocks,
+                'total_not_readable_chunks': total_not_readable_chunks,
                 'elapsed_time': {
                     'raw': elapsed_time,
                     'human_readable': human_readable_elapsed_time
@@ -502,8 +536,11 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                 file.write(f'--- MCWorldTools by Rapha149 ---'
                            f'\n\u00B7\u00B7\u00B7 Remove command blocks \u00B7\u00B7\u00B7'
                            f'\n\nTotal removed command blocks: {total_command_blocks}'
-                           f'\nTotal elapsed time: {human_readable_elapsed_time}'
-                           f'\n\n[ Worlds ]')
+                           f'\nTotal elapsed time: {human_readable_elapsed_time}')
+                if total_not_readable_chunks:
+                    file.write(f'\nTotal not readable chunks: {total_not_readable_chunks}')
+
+                file.write(f'\n\n[ Worlds ]')
                 for world, info in worlds.items():
                     locations_without_command_block = info["locations_without_command_block"]
                     file.write(f'\n{world}'
@@ -519,7 +556,10 @@ def remove(world_folders, output_file, output_format, input_data, confirm):
                                        f'\n        Location: {loc["x"]} {loc["y"]} {loc["z"]}')
                     else:
                         file.write(' ---')
-                    file.write(f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}\n')
+                    file.write(f'\n    Elapsed time: {info["elapsed_time"]["human_readable"]}')
+                    if info['not_readable_chunks']:
+                        file.write(f'\n    Not readable chunks: {info["not_readable_chunks"]}')
+                    file.write('\n')
 
             elif output_format == 'json':
                 json.dump(data, file, indent=3)
