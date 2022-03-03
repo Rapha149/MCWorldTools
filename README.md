@@ -3,7 +3,6 @@
 [![PyPi Version](https://img.shields.io/pypi/v/mcworldtools.svg?style=flat-square)](https://pypi.org/project/mcworldtools/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/mcworldtools.svg?style=flat-square)](https://pypi.org/project/mcworldtools/)
 [![GitHub stars](https://img.shields.io/github/stars/Rapha149/MCWorldTools.svg?style=flat-square&logo=github&label=Stars&logoColor=white)](https://github.com/Rapha149/MCWorldTools/)
-[![PyPi downloads](https://img.shields.io/pypi/dm/mcworldtools.svg?style=flat-square)](https://pypistats.org/packages/mcworldtools/)
 
 Useful tools for Minecraft worlds such as removing unused chunks and finding blocks, command blocks or entities.  
 Tested from `1.7.10` up to `1.18.2`.
