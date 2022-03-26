@@ -92,7 +92,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
                             x, z, = coords['x'], coords['z']
                             try:
                                 chunk = region.get_chunk(x, z)
-                            except ChunkDataError:
+                            except (ChunkDataError, UnicodeDecodeError):
                                 not_readable_chunks += 1
                                 pbar.update(2)
                                 continue
