@@ -18,7 +18,7 @@ def start(world_folders, output_file, output_format, input_data, confirm):
             exit(3)
         print(f'Using {inhabited_time} seconds as inhabited time.')
 
-    if not inhabited_time:
+    if inhabited_time is None:
         print(
             '\nSelect how long a player may have been in a chunk for it to be deleted in seconds. (Leave empty for 0)')
         while True:
